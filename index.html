@@ -7,6 +7,27 @@
 <meta name="format-detection" content="telephone=no,address=no,email=no">
 <meta name="referrer" content="no-referrer-when-downgrade">
 <meta name="description" content="편리한 메신저는 기본, 새로운 모습으로 변신한 네이트온과 만나보세요.">
+
+<!-- Open Graph -->
+<meta property="og:title" content="네이트온 : 오롯이 대화에 집중">
+<meta property="og:description" content="편리한 메신저는 기본, 새로운 모습으로 변신한 네이트온과 만나보세요.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://nateonweb.nate.com/">
+<meta property="og:image" content="https://nateonweb.nate.com/img/OpenGraphTag_nateon_240x240.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="240">
+<meta property="og:image:height" content="240">
+<meta property="og:image:alt" content="네이트온 신규 로고">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="네이트온 : 오롯이 대화에 집중">
+<meta name="twitter:description" content="편리한 메신저는 기본, 새로운 모습으로 변신한 네이트온과 만나보세요.">
+<meta name="twitter:image" content="https://nateonweb.nate.com/img/OpenGraphTag_nateon_240x240.png">
+
+<!-- Favicon / App Icons -->
+<link rel="icon" type="image/x-icon" href="https://nateonweb.nate.com/favicon.ico">
+<link rel="shortcut icon" type="image/x-icon" href="https://nateonweb.nate.com/favicon.ico">
 <link rel="apple-touch-icon" href="https://nateonweb.nate.com/img/Appleicon_nateon_200x200.png">
 <title>네이트온</title>
 <style>
@@ -289,14 +310,22 @@
 
   function tryOpenApp() {
     if (isAndroid) {
-      // intent:// 방식: 시스템이 앱 설치 여부 확인 후 미설치면 fallback URL로 자동 이동
+      // intent:// — host 제거 + action/category 표준 명시 (intent-filter 매칭 최대화)
       var intentUrl =
-        'intent://launch' +
-        '#Intent;scheme=nateonuc' +
+        'intent://#Intent' +
+        ';scheme=nateonuc' +
         ';package=' + ANDROID_PACKAGE +
+        ';action=android.intent.action.VIEW' +
+        ';category=android.intent.category.BROWSABLE' +
         ';S.browser_fallback_url=' + encodeURIComponent(ANDROID_STORE) +
         ';end';
       window.location.href = intentUrl;
+      // 보조: intent가 차단되는 경우를 대비해 짧은 지연 후 직접 스킴도 한 번 호출
+      setTimeout(function () {
+        if (!pageHidden && !document.hidden) {
+          try { window.location.href = APP_SCHEME; } catch (e) {}
+        }
+      }, 250);
     } else if (isIOS) {
       window.location.href = APP_SCHEME;
       setTimeout(goToStore, FALLBACK_DELAY);

@@ -264,7 +264,11 @@
   var ANDROID_PACKAGE    = 'Uxpp.UC';
   var ANDROID_STORE      = 'https://play.google.com/store/apps/details?id=' + ANDROID_PACKAGE + '&hl=ko';
   var IOS_STORE          = 'https://apps.apple.com/kr/app/%EB%84%A4%EC%9D%B4%ED%8A%B8%EC%98%A8/id362693357';
-  var FALLBACK_DELAY     = 1500; // ms
+  // OS별 fallback timing
+  // iOS: 시스템이 "주소를 열 수 없습니다" alert을 표시하기 전에 store로 navigate되어야 alert이 안 뜸 (~300ms)
+  // Android: 앱 실행 여유 확보 (1500ms)
+  var FALLBACK_DELAY_ANDROID = 1500;
+  var FALLBACK_DELAY_IOS     = 300;
   // ================
 
   var ua        = navigator.userAgent || '';
@@ -275,22 +279,23 @@
   var descEl    = document.getElementById('desc');
 
   var pageHidden = false;
+  // iOS Safari에서 native alert("주소를 열 수 없습니다") 뜰 때 blur 이벤트가 발생하므로
+  // blur는 사용하지 않음. 앱이 실제로 열린 경우는 visibilitychange/pagehide로 충분히 감지됨.
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) pageHidden = true;
   });
   window.addEventListener('pagehide', function () { pageHidden = true; });
-  window.addEventListener('blur',     function () { pageHidden = true; });
 
   function showDesktopGuide() {
     if (spinnerEl) spinnerEl.classList.add('hidden');
     if (descEl)    descEl.innerHTML = '모바일에서 접속하면 앱이 자동으로 실행됩니다';
   }
 
-  // 쿠팡 방식 deeplink 호출: 단순 스킴 호출 + timestamp 기반 fallback
+  // 단순 스킴 호출 + timestamp 기반 fallback (쿠팡 방식)
   // setTimeout이 백그라운드 진입 시 지연되는 특성을 이용해 visibility API 없이도 정확히 동작
-  function deeplinkRedirect(scheme, fallbackUrl) {
+  function deeplinkRedirect(scheme, fallbackUrl, delay) {
     var ts = Date.now();
-    var maxDrift = 2 * FALLBACK_DELAY; // 이 시간 이상 지났으면 백그라운드 다녀온 것 → fallback 금지
+    var maxDrift = 2 * delay; // 이 시간 이상 지났으면 백그라운드 다녀온 것 → fallback 금지
 
     // 1) 직접 스킴 호출
     window.location.href = scheme;
@@ -300,14 +305,14 @@
       if ((Date.now() - ts) >= maxDrift) return; // 타이머가 너무 늦게 발화 = 앱이 열렸다 돌아옴
       if (pageHidden || document.hidden) return; // 페이지가 백그라운드 = 앱 실행됨
       window.location.replace(fallbackUrl);
-    }, FALLBACK_DELAY);
+    }, delay);
   }
 
   function tryOpenApp() {
     if (isAndroid) {
-      deeplinkRedirect(APP_SCHEME_ANDROID, ANDROID_STORE);
+      deeplinkRedirect(APP_SCHEME_ANDROID, ANDROID_STORE, FALLBACK_DELAY_ANDROID);
     } else if (isIOS) {
-      deeplinkRedirect(APP_SCHEME_IOS, IOS_STORE);
+      deeplinkRedirect(APP_SCHEME_IOS, IOS_STORE, FALLBACK_DELAY_IOS);
     } else {
       showDesktopGuide();
     }

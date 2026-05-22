@@ -111,11 +111,34 @@
     letter-spacing: -1px;
   }
 
+  /* primary CTA — 네이트온 바로 열기 (수동 fallback) */
+  .open-app {
+    display: block;
+    width: 100%;
+    max-width: 343px;
+    margin: 40px auto 0;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    background: #FFFFFF;
+    color: #5079EE;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 54px;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(40, 60, 120, 0.18);
+    transition: transform 0.1s ease, background 0.15s ease;
+  }
+  .open-app:active { transform: scale(0.98); background: #F1F4FF; }
+
   /* download buttons (원본 디자인 동일) */
   .downlink {
     width: 100%;
     max-width: 343px;
-    margin: 150px auto 0;
+    margin: 16px auto 0;
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -219,8 +242,14 @@
     .downlink {
       width: 372px;
       max-width: none;
-      margin: 84px auto 0;
+      margin: 20px auto 0;
       gap: 16px 12px;
+    }
+    .open-app {
+      max-width: 372px;
+      line-height: 60px;
+      font-size: 17px;
+      margin-top: 48px;
     }
     .downlink a {
       width: 180px;
@@ -241,6 +270,8 @@
 
     <main class="contents">
       <h1 class="tit">오롯이 대화에 집중.<br>네이트온</h1>
+
+      <button type="button" class="open-app" id="openAppBtn">네이트온 바로 열기</button>
 
       <div class="downlink">
         <a href="//br.nate.com/index.php?code=F085" class="win" target="_blank" rel="noopener noreferrer"><span>Windows</span></a>
@@ -263,7 +294,7 @@
   var ANDROID_PACKAGE = 'Uxpp.UC';
   var ANDROID_STORE   = 'https://play.google.com/store/apps/details?id=' + ANDROID_PACKAGE + '&hl=ko';
   var IOS_STORE       = 'https://apps.apple.com/kr/app/id362693357';
-  var FALLBACK_DELAY  = 2000;
+  var FALLBACK_DELAY  = 1500; // ms
   // ================
 
   var ua        = navigator.userAgent || '';
@@ -276,74 +307,75 @@
 
   var spinnerEl = document.getElementById('spinner');
   var descEl    = document.getElementById('desc');
+  var openBtnEl = document.getElementById('openAppBtn');
 
-  var pageHidden  = false;
-  var didRedirect = false;
-
-  function markHidden() { pageHidden = true; }
+  var pageHidden = false;
   document.addEventListener('visibilitychange', function () {
-    if (document.hidden) markHidden();
+    if (document.hidden) pageHidden = true;
   });
-  window.addEventListener('pagehide', markHidden);
-  window.addEventListener('blur', markHidden);
-
-  function goToStore() {
-    if (didRedirect) return;
-    if (pageHidden || document.hidden) return;
-    didRedirect = true;
-    if (isIOS) {
-      window.location.replace(IOS_STORE);
-    } else if (isAndroid) {
-      window.location.replace(ANDROID_STORE);
-    }
-  }
+  window.addEventListener('pagehide', function () { pageHidden = true; });
+  window.addEventListener('blur',     function () { pageHidden = true; });
 
   function showDesktopGuide() {
-    spinnerEl.classList.add('hidden');
-    descEl.innerHTML = '모바일에서 접속하면 앱이 자동으로 실행됩니다';
+    if (spinnerEl) spinnerEl.classList.add('hidden');
+    if (descEl)    descEl.innerHTML = '모바일에서 접속하면 앱이 자동으로 실행됩니다';
+    if (openBtnEl) openBtnEl.classList.add('hidden');
   }
 
   function showInAppGuide() {
-    spinnerEl.classList.add('hidden');
-    descEl.innerHTML = '우측 상단 메뉴에서 "외부 브라우저로 열기"를 선택해주세요';
+    if (spinnerEl) spinnerEl.classList.add('hidden');
+    if (descEl)    descEl.innerHTML = '우측 상단 메뉴에서 "외부 브라우저로 열기"를 선택해주세요';
+  }
+
+  // 쿠팡 방식 deeplink 호출: 단순 스킴 호출 + timestamp 기반 fallback
+  // setTimeout이 백그라운드 진입 시 지연되는 특성을 이용해 visibility API 없이도 정확히 동작
+  function deeplinkRedirect(scheme, fallbackUrl) {
+    var ts = Date.now();
+    var maxDrift = 2 * FALLBACK_DELAY; // 이 시간 이상 지났으면 백그라운드 다녀온 것 → fallback 금지
+
+    // 1) 직접 스킴 호출
+    window.location.href = scheme;
+
+    // 2) 일정 시간 후에도 페이지가 살아있으면 스토어로
+    setTimeout(function () {
+      if ((Date.now() - ts) >= maxDrift) return; // 타이머가 너무 늦게 발화 = 앱이 열렸다 돌아옴
+      if (pageHidden || document.hidden) return; // 페이지가 백그라운드 = 앱 실행됨
+      window.location.replace(fallbackUrl);
+    }, FALLBACK_DELAY);
   }
 
   function tryOpenApp() {
     if (isAndroid) {
-      // intent:// — host 제거 + action/category 표준 명시 (intent-filter 매칭 최대화)
-      var intentUrl =
-        'intent://#Intent' +
-        ';scheme=nateonuc' +
-        ';package=' + ANDROID_PACKAGE +
-        ';action=android.intent.action.VIEW' +
-        ';category=android.intent.category.BROWSABLE' +
-        ';S.browser_fallback_url=' + encodeURIComponent(ANDROID_STORE) +
-        ';end';
-      window.location.href = intentUrl;
-      // 보조: intent가 차단되는 경우를 대비해 짧은 지연 후 직접 스킴도 한 번 호출
-      setTimeout(function () {
-        if (!pageHidden && !document.hidden) {
-          try { window.location.href = APP_SCHEME; } catch (e) {}
-        }
-      }, 250);
+      deeplinkRedirect(APP_SCHEME, ANDROID_STORE);
     } else if (isIOS) {
-      window.location.href = APP_SCHEME;
-      setTimeout(goToStore, FALLBACK_DELAY);
+      deeplinkRedirect(APP_SCHEME, IOS_STORE);
     } else {
       showDesktopGuide();
     }
   }
 
+  // 수동 "네이트온 열기" 버튼: 사용자 제스처라서 차단되지 않음 (가장 확실한 호출)
+  if (openBtnEl) {
+    openBtnEl.addEventListener('click', function (e) {
+      e.preventDefault();
+      pageHidden = false;
+      tryOpenApp();
+    });
+  }
+
+  // 인앱 브라우저
   if (isInApp && (isAndroid || isIOS)) {
     showInAppGuide();
     return;
   }
+  // 데스크탑
   if (!isAndroid && !isIOS) {
     showDesktopGuide();
     return;
   }
 
-  function start() { setTimeout(tryOpenApp, 50); }
+  // 자동 실행 (페이지 진입 즉시)
+  function start() { tryOpenApp(); }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', start);
   } else {

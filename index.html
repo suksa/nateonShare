@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="format-detection" content="telephone=no,address=no,email=no">
+<meta name="referrer" content="no-referrer-when-downgrade">
+<meta name="description" content="편리한 메신저는 기본, 새로운 모습으로 변신한 네이트온과 만나보세요.">
+<link rel="apple-touch-icon" href="https://nateonweb.nate.com/img/Appleicon_nateon_200x200.png">
+<title>네이트온</title>
+<style>
+  @font-face {
+    font-family: 'Pretendard Variable';
+    src: url('https://nateonweb.nate.com/menu/font/PretendardVariable.woff2') format('woff2-variations');
+    font-weight: 45 920;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Pretendard Variable', Pretendard, -apple-system,
+                 BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI',
+                 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+    color: #333;
+    background-color: #5079EE;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -1px;
+    overflow-x: hidden;
+  }
+
+  /* page */
+  .page {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100dvh;
+    background-image:
+      url('https://nateonweb.nate.com/menu/img/main/2024/nateon_mobile_main_visual.webp'),
+      linear-gradient(180deg, #5079EE 0%, #F9FAFB 100%);
+    background-repeat: no-repeat;
+    background-position: 50% 0;
+    background-size: cover;
+    padding: 64px 16px 32px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* header (로고만, outLink 제외) */
+  .header {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 16px 24px 12px;
+    box-sizing: border-box;
+    z-index: 10;
+  }
+  .header .logo {
+    display: block;
+    width: 80px;
+    height: 28px;
+    background-image: url('https://nateonweb.nate.com/menu/img/main/2024/img_nateonlogo_white.png');
+    background-repeat: no-repeat;
+    background-position: 0 0;
+    background-size: contain;
+    text-indent: -9999px;
+    overflow: hidden;
+  }
+
+  /* contents */
+  .contents {
+    width: 100%;
+    max-width: 375px;
+    margin: 0 auto;
+    padding-top: 100px;
+    text-align: center;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .tit {
+    color: #FFF;
+    text-align: center;
+    font-size: 28px;
+    font-weight: 300;
+    line-height: 38px;
+    letter-spacing: -1px;
+  }
+
+  /* download buttons (원본 디자인 동일) */
+  .downlink {
+    width: 100%;
+    max-width: 343px;
+    margin: 150px auto 0;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 12px 8px;
+    justify-content: center;
+  }
+  .downlink a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(50% - 4px);
+    line-height: 48px;
+    text-align: center;
+    color: #000;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.60);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    text-decoration: none;
+    transition: background 0.15s ease;
+  }
+  .downlink a:active { background: rgba(255, 255, 255, 0.88); }
+  .downlink a span {
+    display: inline-block;
+    padding-left: 32px;
+    position: relative;
+  }
+  .downlink a span::before {
+    content: '';
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    background-repeat: no-repeat;
+    background-position: 0 0;
+    background-size: auto 100%;
+  }
+  .downlink a.win span::before { background-image: url('https://nateonweb.nate.com/menu/img/main/2024/window.png'); }
+  .downlink a.mac span::before { background-image: url('https://nateonweb.nate.com/menu/img/main/2024/macOs.png'); }
+  .downlink a.and span::before { background-image: url('https://nateonweb.nate.com/menu/img/main/2024/google.png'); }
+  .downlink a.ios span::before { background-image: url('https://nateonweb.nate.com/menu/img/main/2024/apple.png'); }
+
+  /* 모바일: Windows/Mac 숨김 (원본과 동일) */
+  .downlink a.win, .downlink a.mac { display: none; }
+
+  /* loading (작게, 다운로드 버튼 아래) */
+  .loading {
+    margin-top: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #FFF;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text {
+    color: #FFF;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.92;
+  }
+  .hidden { display: none !important; }
+
+  /* desktop */
+  @media (min-width: 1100px) {
+    body { min-width: 1100px; }
+    .page {
+      height: 800px;
+      min-height: 800px;
+      background-image:
+        url('https://nateonweb.nate.com/menu/img/main/2024/nateon_web_main_visual.webp'),
+        linear-gradient(180deg, #5079EE 0%, #F9FAFB 100%);
+      background-size: auto 100%, auto;
+      background-position: 100% 0, 0 0;
+      padding: 0;
+      justify-content: center;
+    }
+    .header { padding: 24px; }
+    .header .logo { width: 96px; height: 32px; }
+    .contents {
+      max-width: 1100px;
+      padding: 0;
+      justify-content: center;
+      align-items: center;
+      flex: 1;
+    }
+    .tit { font-size: 60px; line-height: 74px; }
+    .downlink {
+      width: 372px;
+      max-width: none;
+      margin: 84px auto 0;
+      gap: 16px 12px;
+    }
+    .downlink a {
+      width: 180px;
+      line-height: 54px;
+      font-size: 16px;
+    }
+    .downlink a.win, .downlink a.mac { display: flex; }
+    .loading { margin-top: 36px; }
+    .loading-text { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <span class="logo" aria-label="네이트온">네이트온</span>
+    </header>
+
+    <main class="contents">
+      <h1 class="tit">오롯이 대화에 집중.<br>네이트온</h1>
+
+      <div class="downlink">
+        <a href="//br.nate.com/index.php?code=F085" class="win" target="_blank" rel="noopener noreferrer"><span>Windows</span></a>
+        <a href="//br.nate.com/index.php?code=F065" class="mac" target="_blank" rel="noopener noreferrer"><span>Mac OS</span></a>
+        <a href="https://play.google.com/store/apps/details?id=Uxpp.UC&amp;hl=ko" class="and" target="_blank" rel="noopener noreferrer"><span>Google Play</span></a>
+        <a href="https://itunes.apple.com/kr/app/nateon/id362693357?mt=8" class="ios" target="_blank" rel="noopener noreferrer"><span>App Store</span></a>
+      </div>
+
+      <div class="loading" id="loading">
+        <div class="spinner" id="spinner"></div>
+        <div class="loading-text" id="desc">잠시 후 자동으로 이동됩니다</div>
+      </div>
+    </main>
+  </div>
+
+<script>
+(function () {
+  // ===== 설정 =====
+  var APP_SCHEME      = 'nateonuc://';
+  var ANDROID_PACKAGE = 'Uxpp.UC';
+  var ANDROID_STORE   = 'https://play.google.com/store/apps/details?id=' + ANDROID_PACKAGE + '&hl=ko';
+  var IOS_STORE       = 'https://apps.apple.com/kr/app/id362693357';
+  var FALLBACK_DELAY  = 2000;
+  // ================
+
+  var ua        = navigator.userAgent || '';
+  var isAndroid = /android/i.test(ua);
+  var isIOS     = /iPhone|iPad|iPod/i.test(ua) && !window.MSStream;
+  var isKakao   = /KAKAOTALK/i.test(ua);
+  var isLine    = /Line\//i.test(ua);
+  var isFB      = /(FBAN|FBAV|Instagram)/i.test(ua);
+  var isInApp   = isKakao || isLine || isFB;
+
+  var spinnerEl = document.getElementById('spinner');
+  var descEl    = document.getElementById('desc');
+
+  var pageHidden  = false;
+  var didRedirect = false;
+
+  function markHidden() { pageHidden = true; }
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) markHidden();
+  });
+  window.addEventListener('pagehide', markHidden);
+  window.addEventListener('blur', markHidden);
+
+  function goToStore() {
+    if (didRedirect) return;
+    if (pageHidden || document.hidden) return;
+    didRedirect = true;
+    if (isIOS) {
+      window.location.replace(IOS_STORE);
+    } else if (isAndroid) {
+      window.location.replace(ANDROID_STORE);
+    }
+  }
+
+  function showDesktopGuide() {
+    spinnerEl.classList.add('hidden');
+    descEl.innerHTML = '모바일에서 접속하면 앱이 자동으로 실행됩니다';
+  }
+
+  function showInAppGuide() {
+    spinnerEl.classList.add('hidden');
+    descEl.innerHTML = '우측 상단 메뉴에서 "외부 브라우저로 열기"를 선택해주세요';
+  }
+
+  function tryOpenApp() {
+    if (isAndroid) {
+      // intent:// 방식: 시스템이 앱 설치 여부 확인 후 미설치면 fallback URL로 자동 이동
+      var intentUrl =
+        'intent://launch' +
+        '#Intent;scheme=nateonuc' +
+        ';package=' + ANDROID_PACKAGE +
+        ';S.browser_fallback_url=' + encodeURIComponent(ANDROID_STORE) +
+        ';end';
+      window.location.href = intentUrl;
+    } else if (isIOS) {
+      window.location.href = APP_SCHEME;
+      setTimeout(goToStore, FALLBACK_DELAY);
+    } else {
+      showDesktopGuide();
+    }
+  }
+
+  if (isInApp && (isAndroid || isIOS)) {
+    showInAppGuide();
+    return;
+  }
+  if (!isAndroid && !isIOS) {
+    showDesktopGuide();
+    return;
+  }
+
+  function start() { setTimeout(tryOpenApp, 50); }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
+})();
+</script>
+</body>
+</html>
